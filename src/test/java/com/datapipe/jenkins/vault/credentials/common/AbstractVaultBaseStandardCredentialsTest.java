@@ -5,8 +5,10 @@ import hudson.XmlFile;
 import hudson.model.ItemGroup;
 import java.io.File;
 import java.io.FileInputStream;
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 import org.junit.Rule;
@@ -42,6 +44,26 @@ public class AbstractVaultBaseStandardCredentialsTest {
         // verify document does not include include context field
         try (FileInputStream fis = new FileInputStream(out)) {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            String FEATURE = null;
+            try {
+                FEATURE = "http://xml.org/sax/features/external-parameter-entities";
+                dbf.setFeature(FEATURE, false);
+
+                FEATURE = "http://apache.org/xml/features/nonvalidating/load-external-dtd";
+                dbf.setFeature(FEATURE, false);
+
+                FEATURE = "http://xml.org/sax/features/external-general-entities";
+                dbf.setFeature(FEATURE, false);
+
+                dbf.setXIncludeAware(false);
+                dbf.setExpandEntityReferences(false);
+
+                dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+
+            } catch (ParserConfigurationException e) {
+                throw new IllegalStateException("The feature '"
+                    + FEATURE + "' is not supported by your XML processor.", e);
+            }
             DocumentBuilder db = dbf.newDocumentBuilder();
             Document doc = db.parse(fis);
             XPath xpath = XPathFactory.newInstance().newXPath();
